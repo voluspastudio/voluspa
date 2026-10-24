@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VP Studio · Issue 08: Seeing Things</title>
+<meta name="description" content="VP Studio is an independent visual research archive on perception, attention, memory and emotion. Research becomes art, and looking becomes the experience.">
+<meta property="og:title" content="VP Studio · Issue 08: Seeing Things">
+<meta property="og:description" content="An independent visual research archive. Research becomes art, and looking becomes the experience.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#DCDAD4">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body class="cover">
+<a class="skip" href="#p75">Skip to Figure 8</a>
+<div class="desk">
+<main class="spread" aria-label="Cover, an open spread">
+
+<section class="pg" aria-label="Page 74">
+<header class="row t">
+<div><a href="/" class="b">VP Studio</a><br><span data-bind="issue.label"></span><br><span data-bind="issue.date"></span></div>
+<div aria-hidden="true">Seeing is a proposal<br>the brain makes<br>about the wor</div>
+<div class="r" data-bind="issue.theme"></div>
+</header>
+
+<figure class="spec">
+<p class="t b" style="margin: 0 0 4px">Figure 7.</p>
+<p class="t" style="margin: 0 0 22px; max-width: 260px">At what point does a letter stop being one? Hover a letter to give it back its shape.</p>
+<div class="letters" id="letters" aria-hidden="true"></div>
+<figcaption style="margin-top: 18px; max-width: 300px">
+<label for="dist" class="t b" style="display: flex; justify-content: space-between"><span>Distortion</span><span id="distVal">55</span></label>
+<input id="dist" class="slider" type="range" min="0" max="100" step="1" value="55">
+<span class="t" style="display: block">The same alphabet, read at 0. Somewhere past 40 most readers stop seeing letters and start seeing marks.<sup>*</sup></span>
+</figcaption>
+</figure>
+
+<footer class="row t foot">
+<nav aria-label="Sections" class="navlist">
+<a href="/archive">Archive</a>
+<a href="/research">Research</a>
+<a href="/studio">Studio</a>
+<a href="/about">About</a>
+</nav>
+<div aria-hidden="true">Seeing<br>is a propo<br>sal the bra</div>
+<div class="r">74</div>
+</footer>
+</section>
+
+<div class="gut" aria-hidden="true"></div>
+
+<section class="pg" id="p75" aria-label="Page 75">
+<header class="row t">
+<div>75</div>
+<div><span class="b" data-bind="issue.figureTitle"></span><br><br><span data-bind="issue.figureCaption"></span></div>
+<div class="r" data-bind="issue.classLabel"></div>
+</header>
+
+<div class="blot-narrow"><svg role="img" aria-label="Figure 8: an ink blot, mirrored left to right" viewBox="-400 -420 800 840"><use href="#blotAll"></use></svg></div>
+
+<div class="see">
+<ul class="t" id="answers" aria-live="polite"></ul>
+<form id="seeForm">
+<label for="see" class="t b">What do you see?</label>
+<div style="display: flex; gap: 6px">
+<input id="see" type="text" maxlength="60" placeholder="a moth, two dancers…" autocomplete="off">
+<button type="submit" class="mini">Record</button>
+</div>
+<button type="button" class="mini" id="refold" style="align-self: flex-start">Fold a new blot</button>
+</form>
+</div>
+
+<footer class="row t" style="padding-top: 28px; align-items: end">
+<div><sup>*</sup> Speculative. A prompt for<br>Investigation 08, not a<br>measured finding.</div>
+<div><a class="b" id="invLink" href="/research" style="display: inline-flex; min-height: 44px; align-items: center"><span data-bind="issue.investigationLabel"></span>&nbsp;→</a></div>
+<div class="r">view<br>again</div>
+</footer>
+</section>
+
+<div class="blot-wide"><svg role="img" aria-label="Figure 8: an ink blot folded along the gutter, mirrored left to right. A new blot appears each time it is folded." viewBox="-400 -420 800 840" preserveAspectRatio="xMidYMid meet"><use href="#blotAll"></use></svg></div>
+
+<svg aria-hidden="true" width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden">
+<defs>
+<filter id="ink" x="-30%" y="-20%" width="160%" height="140%" color-interpolation-filters="sRGB">
+<feTurbulence id="inkNoise" type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7" result="n"></feTurbulence>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="34" xChannelSelector="R" yChannelSelector="G" result="d"></feDisplacementMap>
+<feGaussianBlur in="d" stdDeviation="5" result="b"></feGaussianBlur>
+<feColorMatrix in="b" type="matrix" values="0 0 0 0 0.067  0 0 0 0 0.067  0 0 0 0 0.067  0 0 0 28 -11"></feColorMatrix>
+</filter>
+<g id="blotAll">
+<g id="blotHalf" filter="url(#ink)"></g>
+<use href="#blotHalf" transform="scale(-1 1)"></use>
+</g>
+</defs>
+</svg>
+
+<div class="giant" aria-hidden="true" data-bind="issue.theme"></div>
+
+<svg class="cross" aria-hidden="true"><defs><pattern id="crossP" width="150" height="150" patternUnits="userSpaceOnUse" x="40" y="40"><path d="M0 -7V7M-7 0H7" stroke="#111" stroke-width="0.8" opacity="0.4" transform="translate(75 75)"></path></pattern></defs><rect width="100%" height="100%" fill="url(#crossP)"></rect></svg>
+
+</main>
+</div>
+<script src="/assets/content.js"></script>
+<script src="/assets/cover.js"></script>
+</body>
+</html>
