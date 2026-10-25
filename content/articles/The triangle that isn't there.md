@@ -25,7 +25,20 @@ The arrangement is known as a Kanizsa figure, after the Italian psychologist Gae
 
 That finding matters because it places some of the filling-in early in visual processing, not only in later interpretation. It does not mean the whole experience is explained there.
 
-![[kanizsa-figure.svg|The same figure used on the cover of Issue 07. Rotate the inducers and the triangle disappears.]]
+```vp-kanizsa
+caption: Rotate the inducers. The edges vanish, then return when the wedges line up again.
+```
+
+The steps, as far as research can currently say:
+
+```mermaid
+%% caption: A simplified sequence. Researchers still debate where each step happens.
+graph LR
+  A[Aligned wedges] --> B[Edges detected at the cut]
+  B --> C[Contour completed across the gap]
+  C --> D[Surface seen in front]
+  D --> E[Triangle looks brighter]
+```
 
 ## Why a designer should care
 
@@ -33,6 +46,21 @@ That finding matters because it places some of the filling-in early in visual pr
 > If the eye completes shapes this readily, then a layout does not need to draw every edge. Alignment alone may be enough to make a group feel bounded.
 
 That is a design idea, not a measured result. It is the kind of question this archive exists to test.
+
+```vp-embed
+name: illusory-square
+height: 520
+caption: Try it with four disks. Drag them until a square appears.
+```
+
+```vp-choice
+question: Did the triangle look brighter than the page?
+options:
+  - Yes, clearly
+  - A little
+  - No difference
+note: Your answer stays in this browser for now.
+```
 
 [^kanizsa]: Kanizsa, G. (1955). Margini quasi-percettivi in campi con stimolazione omogenea. *Rivista di Psicologia*, 49, 7–30.
 [^vdh]: von der Heydt, R., Peterhans, E., & Baumgartner, G. (1984). Illusory contours and cortical neuron responses. *Science*, 224, 1260–1262.

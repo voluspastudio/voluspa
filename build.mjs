@@ -56,7 +56,7 @@ function catKey(v) {
 /* ---------- media: every non-markdown file in content/ is published under /media ---------- */
 const media = new Map();
 for (const f of walk(CONTENT)) {
-  if (f.endsWith('.md') || f.includes(`${path.sep}_templates${path.sep}`)) continue;
+  if (f.endsWith('.md') || f.includes(`${path.sep}_templates${path.sep}`) || f.includes(`${path.sep}interactives${path.sep}`)) continue;
   media.set(path.basename(f), f);
 }
 const mediaUrl = (name) => (media.has(name) ? `/media/${encodeURIComponent(name)}` : null);
@@ -65,6 +65,51 @@ const mediaUrl = (name) => (media.has(name) ? `/media/${encodeURIComponent(name)
 const md = new MarkdownIt({ html: true, linkify: true, typographer: true }).use(footnote);
 md.renderer.rules.footnote_block_open = () => '<section class="refs" aria-labelledby="refs-h"><h2 id="refs-h">References and notes</h2><ol class="refs-list">\n';
 md.renderer.rules.footnote_block_close = () => '</ol></section>\n';
+
+/* Interactive pieces and diagrams written as code blocks in Obsidian:
+   ```vp-kanizsa      ```mermaid
+   caption: ...       graph LR; A-->B
+   ```                ```                                              */
+const WIDGETS = new Set(['kanizsa', 'afterimage', 'flash', 'choice', 'compare', 'blot']);
+const IMAGE_KEYS = ['image', 'before', 'after'];
+function resolveImages(cfg) {
+  for (const k of IMAGE_KEYS) if (typeof cfg[k] === 'string') cfg[k] = mediaUrl(cfg[k].replace(/^!?\[\[|\]\]$/g, '').trim()) || cfg[k];
+  if (Array.isArray(cfg.options)) cfg.options = cfg.options.map((o) => (typeof o === 'string' ? { label: o } : (resolveImages(o), o)));
+  return cfg;
+}
+const defaultFence = md.renderer.rules.fence;
+md.renderer.rules.fence = (tokens, idx, opts, env, self) => {
+  const t = tokens[idx], info = (t.info || '').trim().toLowerCase();
+  if (info === 'mermaid') {
+    env.mermaid = true;
+    const cm = t.content.match(/^%%\s*caption:\s*(.+)$/m);
+    return `<figure class="fig fig-diagram"><pre class="mermaid">${esc(t.content)}</pre><figcaption><span class="fig-n">Fig. #.</span> ${cm ? esc(cm[1].trim()) : 'Diagram.'}</figcaption></figure>\n`;
+  }
+  const m = info.match(/^vp-([a-z]+)/);
+  if (m && m[1] === 'embed') {
+    let cfg = {};
+    try { cfg = yaml.load(t.content) || {}; } catch (e) { cfg = {}; }
+    const name = slugify(cfg.name || '');
+    const exists = name && fs.existsSync(path.join(CONTENT, 'interactives', name, 'index.html'));
+    const height = Math.max(200, Math.min(1600, Number(cfg.height) || 560));
+    const cap = cfg.caption ? ' ' + esc(cfg.caption) : ' Interactive.';
+    const inner = exists
+      ? `<iframe class="vp-embed" src="/interactives/${name}/" title="${esc(cfg.title || cfg.caption || name)}" loading="lazy" style="height:${height}px" allow="fullscreen"></iframe>`
+      : `<p class="vp-fallback mo">No interactive called “${esc(cfg.name || '')}” in content/interactives yet.</p>`;
+    return `<figure class="fig fig-widget fig-embed">${inner}<figcaption><span class="fig-n">Fig. #.</span>${cap}</figcaption></figure>\n`;
+  }
+  if (m) {
+    let cfg = {};
+    try { cfg = yaml.load(t.content) || {}; } catch (e) { cfg = { error: 'Could not read the settings in this block.' }; }
+    if (typeof cfg !== 'object') cfg = {};
+    resolveImages(cfg);
+    const name = WIDGETS.has(m[1]) ? m[1] : 'unknown';
+    env.widgets = true;
+    const cap = cfg.caption ? ' ' + esc(cfg.caption) : ' Interactive.';
+    return `<figure class="fig fig-widget"><div class="vp-widget" data-widget="${name}" data-config="${esc(JSON.stringify(cfg))}"><p class="vp-fallback mo">This figure is interactive and needs JavaScript.</p></div><figcaption><span class="fig-n">Fig. #.</span>${cap}</figcaption></figure>\n`;
+  }
+  return defaultFence(tokens, idx, opts, env, self);
+};
 
 const CALLOUT_LABEL = { note: 'Note', observation: 'Observation', finding: 'Finding', speculation: 'Speculation', try: 'Try it', quote: 'Quote', question: 'Question', method: 'Method', info: 'Note', tip: 'Note' };
 const MARGIN = new Set(['note', 'observation', 'try', 'info', 'tip', 'question']);
@@ -102,12 +147,10 @@ function preprocess(src, slugByTitle) {
   return out.join('\n');
 }
 function postprocess(html) {
+  html = html.replace(/<p><img src="([^"]+)" alt="([^"]*)"\s*\/?><\/p>/g, (m, src, alt) =>
+    `<figure class="fig"><img src="${src}" alt="${alt}" loading="lazy"><figcaption><span class="fig-n">Fig. #.</span>${alt ? ' ' + alt : ''}</figcaption></figure>`);
   let n = 0;
-  return html.replace(/<p><img src="([^"]+)" alt="([^"]*)"\s*\/?><\/p>/g, (m, src, alt) => {
-    n++;
-    const cap = alt ? ` ${alt}` : '';
-    return `<figure class="fig"><img src="${src}" alt="${alt}" loading="lazy"><figcaption><span class="fig-n">Fig. ${n}.</span>${cap}</figcaption></figure>`;
-  });
+  return html.replace(/<span class="fig-n">Fig\. #\.<\/span>/g, () => `<span class="fig-n">Fig. ${++n}.</span>`);
 }
 
 /* ---------- read articles ---------- */
@@ -147,7 +190,7 @@ const fmtDate = (d) => `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.ge
 const FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">';
 const NAV = (cur) => [['/archive', 'I. Archive'], ['/research', 'II. Research'], ['/studio', 'III. Studio'], ['/about', 'IV. About']]
   .map(([h, l]) => `<a href="${h}"${h === cur ? ' aria-current="page"' : ''}>${l}</a>`).join('\n');
-const shell = ({ title, desc, body, bodyClass = '', style = '', cur = '/research' }) => `<!doctype html>
+const shell = ({ title, desc, body, bodyClass = '', style = '', cur = '/research', scripts = '' }) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -179,7 +222,7 @@ ${body}
 </main>
 <footer class="pagefoot mo"><span>VP Studio · Visual research archive</span><a href="/">Back to the current issue</a></footer>
 </div>
-</body>
+${scripts}</body>
 </html>
 `;
 
@@ -188,6 +231,7 @@ fs.rmSync(OUT, { recursive: true, force: true });
 copyDir(ROOT, OUT, true);
 fs.mkdirSync(path.join(OUT, 'media'), { recursive: true });
 for (const [name, file] of media) fs.copyFileSync(file, path.join(OUT, 'media', name));
+if (fs.existsSync(path.join(CONTENT, 'interactives'))) copyDir(path.join(CONTENT, 'interactives'), path.join(OUT, 'interactives'));
 
 const figCounts = {};
 for (const a of [...articles].sort((x, y) => x.date - y.date)) {
@@ -197,7 +241,10 @@ for (const a of [...articles].sort((x, y) => x.date - y.date)) {
 }
 
 for (const a of articles) {
-  const html = postprocess(md.render(preprocess(a.body, slugByTitle)));
+  const env = {};
+  const html = postprocess(md.render(preprocess(a.body, slugByTitle), env));
+  const scripts = (env.widgets ? '<script src="/assets/widgets.js" defer></script>\n' : '') +
+    (env.mermaid ? '<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>\n<script src="/assets/diagrams.js"></script>\n' : '');
   const words = a.body.replace(/[#>*_`\[\]()!|-]/g, ' ').split(/\s+/).filter(Boolean).length;
   const mins = Math.max(1, Math.round(words / 230));
   const related = articles.filter((o) => o !== a && o.cat === a.cat).slice(0, 3);
@@ -221,7 +268,7 @@ ${others.length ? `<nav class="art-related" aria-labelledby="rel-h"><h2 id="rel-
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'index.html'), shell({
     title: `${a.title} · VP Studio`, desc: a.abstract || a.title, body,
-    bodyClass: `article layout-${a.layout}`, style: `--accent: ${a.accent}`
+    bodyClass: `article layout-${a.layout}`, style: `--accent: ${a.accent}`, scripts
   }));
 }
 
