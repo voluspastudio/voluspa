@@ -12,6 +12,14 @@
 
   /* ---------- Records ---------- */
   var CATS = VP.categories;
+  /* Published articles (written by the build from content/articles) become live records. */
+  (window.VP_ARTICLES || []).forEach(function (a) {
+    var norm = function (x) { return String(x).toLowerCase().replace(/[‘’]/g, "'").trim(); };
+    var t = norm(a.title), hit = null, at = -1;
+    VP.records.forEach(function (r, i) { if (norm(r.title) === t) hit = r; if (r.cat === a.cat) at = i; });
+    if (hit) { hit.href = a.href; if (a.dek) hit.dek = a.dek; if (a.type) hit.type = a.type; return; }
+    VP.records.splice(at + 1, 0, { cat: a.cat, title: a.title, type: a.type, dek: a.dek, href: a.href });
+  });
   Object.keys(CATS).forEach(function (k) { var c = CATS[k]; c.swatch = ok((c.hue[0] + c.hue[1]) / 2); });
   var counts = {}, seen = {};
   VP.records.forEach(function (r) { counts[r.cat] = (counts[r.cat] || 0) + 1; });
